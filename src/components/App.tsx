@@ -12,7 +12,6 @@ import { useKeyPress } from 'shared/hooks/useKeyPress'
 import { paletteStore } from 'store/palette'
 import { selectedStore, setSelected } from 'store/currentPosition'
 import { Header } from './Header'
-
 const chartWidth = 400
 
 export default function App() {

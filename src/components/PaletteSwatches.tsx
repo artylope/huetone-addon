@@ -20,6 +20,7 @@ import { useStore } from '@nanostores/react'
 import { colorSpaceStore, paletteStore, setPalette } from 'store/palette'
 import { selectedStore, setSelected } from 'store/currentPosition'
 import { overlayStore, versusColorStore } from 'store/overlay'
+import * as Toast from '@radix-ui/react-toast'
 
 const contrast = {
   WCAG: wcagContrast,
@@ -44,79 +45,107 @@ export const PaletteSwatches: FC = () => {
     [overlay.mode, versusColor]
   )
 
-  return (
-    <Wrapper columns={tones.length} rows={hues.length}>
-      {/* HEADER */}
-      <div />
-      {tones.map((toneName, tone) => (
-        <ToneInput
-          key={tone}
-          value={toneName}
-          onChange={e => setPalette(renameTone(palette, tone, e.target.value))}
-        />
-      ))}
-      <SmallButton
-        title="Add tone"
-        onClick={() => setPalette(addTone(palette))}
-      >
-        +
-      </SmallButton>
+  const [open, setOpen] = React.useState(false)
+  const [copiedColor, setCopiedColor] = React.useState('')
 
-      {/* HUES */}
-      {colors.map((hueColors, hueId) => (
-        <Fragment key={hueId}>
-          <InvisibleInput
-            key={hueId}
-            value={hues[hueId]}
+  return (
+    <>
+      <Wrapper columns={tones.length} rows={hues.length}>
+        {/* HEADER */}
+        <div />
+        {tones.map((toneName, tone) => (
+          <ToneInput
+            key={tone}
+            value={toneName}
             onChange={e =>
-              setPalette(renameHue(palette, hueId, e.target.value))
+              setPalette(renameTone(palette, tone, e.target.value))
             }
           />
-          {hueColors.map((color, toneId) => {
-            const isSelected =
-              hueId === selected.hueId && toneId === selected.toneId
-            return (
-              <Swatch
-                key={toneId + '-' + hueId}
-                onClick={() => setSelected([hueId, toneId])}
-                style={{
-                  background: !bPress
-                    ? color.hex
-                    : colorSpace.lch2color([color.l, 0, 0]).hex,
-                  color: getMostContrast(color.hex, ['#000', '#fff']),
-                  borderRadius: isSelected ? 'var(--radius-m)' : 0,
-                  transform: isSelected ? 'scale(1.25)' : 'scale(1)',
-                  zIndex: isSelected ? 3 : 0,
-                  fontWeight: isSelected ? 900 : 400,
-                }}
-              >
-                <span>{getCR(color.hex)}</span>
-              </Swatch>
-            )
-          })}
+        ))}
+        <SmallButton
+          title="Add tone"
+          onClick={() => setPalette(addTone(palette))}
+        >
+          +
+        </SmallButton>
+
+        {/* HUES */}
+        {colors.map((hueColors, hueId) => (
+          <Fragment key={hueId}>
+            <InvisibleInput
+              key={hueId}
+              value={hues[hueId]}
+              onChange={e =>
+                setPalette(renameHue(palette, hueId, e.target.value))
+              }
+            />
+            {hueColors.map((color, toneId) => {
+              const isSelected =
+                hueId === selected.hueId && toneId === selected.toneId
+              return (
+                <Swatch
+                  key={toneId + '-' + hueId}
+                  onClick={() => setSelected([hueId, toneId])}
+                  onDoubleClick={() => {
+                    navigator.clipboard.writeText(color.hex)
+                    setCopiedColor(color.hex)
+                    setOpen(true)
+                  }}
+                  style={{
+                    background: !bPress
+                      ? color.hex
+                      : colorSpace.lch2color([color.l, 0, 0]).hex,
+                    color: getMostContrast(color.hex, ['#000', '#fff']),
+                    borderRadius: isSelected ? 'var(--radius-m)' : 0,
+                    transform: isSelected ? 'scale(1.25)' : 'scale(1)',
+                    zIndex: isSelected ? 3 : 0,
+                    fontWeight: isSelected ? 900 : 400,
+                  }}
+                  title={`${color.hex} (double-click to copy)`}
+                >
+                  <span>{getCR(color.hex)}</span>
+                </Swatch>
+              )
+            })}
+            <SmallButton
+              title="Delete this row"
+              onClick={() => setPalette(removeHue(palette, hueId))}
+            >
+              ×
+            </SmallButton>
+          </Fragment>
+        ))}
+
+        {/* COLUMN BUTTONS */}
+        <SmallButton
+          title="Add row"
+          onClick={() => setPalette(addHue(palette))}
+        >
+          +
+        </SmallButton>
+        {tones.map((toneName, toneId) => (
           <SmallButton
-            title="Delete this row"
-            onClick={() => setPalette(removeHue(palette, hueId))}
+            key={toneId}
+            title="Delete this column"
+            onClick={() => setPalette(removeTone(palette, toneId))}
           >
             ×
           </SmallButton>
-        </Fragment>
-      ))}
+        ))}
+      </Wrapper>
 
-      {/* COLUMN BUTTONS */}
-      <SmallButton title="Add row" onClick={() => setPalette(addHue(palette))}>
-        +
-      </SmallButton>
-      {tones.map((toneName, toneId) => (
-        <SmallButton
-          key={toneId}
-          title="Delete this column"
-          onClick={() => setPalette(removeTone(palette, toneId))}
+      <Toast.Provider swipeDirection="right">
+        <Toast.Root
+          className="ToastRoot"
+          open={open}
+          onOpenChange={setOpen}
+          duration={2000}
         >
-          ×
-        </SmallButton>
-      ))}
-    </Wrapper>
+          <Toast.Description>{copiedColor} copied!</Toast.Description>
+        </Toast.Root>
+        <Toast.Viewport className="ToastViewport" />
+      </Toast.Provider>
+    </>
   )
 }
 
@@ -152,4 +181,37 @@ const SmallButton = styled(Button)`
   ${Wrapper}:hover & {
     opacity: 1;
   }
+`
+
+const ToastViewport = styled(Toast.Viewport)`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100vw;
+  margin: 0;
+  list-style: none;
+  z-index: 2147483647;
+  outline: none;
+`
+
+const ToastRoot = styled(Toast.Root)`
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-m);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`
+
+const ToastDescription = styled(Toast.Description)`
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
 `
