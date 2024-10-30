@@ -133,7 +133,7 @@ const ControlRow = styled.main`
 const PaletteSection = styled.section`
   width: min-content;
   overflow: auto;
-  min-width: 400px;
+  min-width: 800px;
   display: flex;
   flex-direction: column;
   gap: 16px;
