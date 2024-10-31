@@ -72,6 +72,6 @@ export const ExportField: FC = () => {
 
 const JSONArea = styled(TextArea)`
   width: 100%;
-  min-height: 120px;
-  resize: none;
+  height: 100%;
+  min-height: 360px;
 `

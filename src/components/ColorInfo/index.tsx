@@ -21,6 +21,8 @@ const ContrastStack = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-height: 200px;
+  overflow-y: scroll;
 `
 
 const ContrastGroup: FC<{ versusColor: string }> = props => {
