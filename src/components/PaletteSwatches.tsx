@@ -87,8 +87,8 @@ export const PaletteSwatches: FC = () => {
                   key={toneId + '-' + hueId}
                   onClick={() => setSelected([hueId, toneId])}
                   onDoubleClick={() => {
-                    navigator.clipboard.writeText(color.hex)
-                    setCopiedColor(color.hex)
+                    navigator.clipboard.writeText(color.hex.toLowerCase())
+                    setCopiedColor(color.hex.toLowerCase())
                     setOpen(true)
                   }}
                   style={{
@@ -134,17 +134,21 @@ export const PaletteSwatches: FC = () => {
         ))}
       </Wrapper>
 
-      <Toast.Provider swipeDirection="right">
-        <Toast.Root
-          className="ToastRoot"
-          open={open}
-          onOpenChange={setOpen}
-          duration={2000}
-        >
-          <Toast.Description>{copiedColor} copied!</Toast.Description>
-        </Toast.Root>
-        <Toast.Viewport className="ToastViewport" />
-      </Toast.Provider>
+      {open ? (
+        <Toast.Provider swipeDirection="right">
+          <Toast.Root
+            className="ToastRoot"
+            open={open}
+            onOpenChange={setOpen}
+            duration={2000}
+          >
+            <Toast.Description>{copiedColor} copied!</Toast.Description>
+          </Toast.Root>
+          <Toast.Viewport className="ToastViewport" />
+        </Toast.Provider>
+      ) : (
+        ''
+      )}
     </>
   )
 }
@@ -184,7 +188,7 @@ const SmallButton = styled(Button)`
 `
 
 const ToastViewport = styled(Toast.Viewport)`
-  position: fixed;
+  position: absolute;
   top: 20px;
   right: 20px;
   display: flex;

@@ -77,9 +77,6 @@ export const ColorEditor: FC<ColorEditorProps> = ({ color, onChange }) => {
           let color = hex2color(value)
           if (color) onChange(color)
         }}
-        onClick={() => {
-          navigator.clipboard.writeText(hex)
-        }}
       />
     </ControlGroup>
   )
